@@ -30,7 +30,7 @@ compile group: 'com.github.akurilov', name: 'java-coroutines', version: '1.0.2'
 
 ## Implementing Basic Coroutine
 
-To implement the simplies coroutine one should extend the
+To implement the simpliest coroutine one should extend the
 `CoroutineBase` class:
 
 ```java
@@ -71,20 +71,17 @@ import com.github.akurilov.coroutines.CoroutinesProcessor;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
-/**
- * Created by andrey on 23.08.17.
- */
 public class Main {
 
-	public static void main(final String... args)
-	throws InterruptedException, IOException {
+    public static void main(final String... args)
+    throws InterruptedException, IOException {
 
-		final CoroutinesProcessor coroutinesProcessor = new CoroutinesProcessor();
-		final Coroutine helloCoroutine = new HelloWorldCoroutine(coroutinesProcessor);
-		helloCoroutine.start();
-		TimeUnit.SECONDS.sleep(10);
-		helloCoroutine.close();
-	}
+        final CoroutinesProcessor coroutinesProcessor = new CoroutinesProcessor();
+        final Coroutine helloCoroutine = new HelloWorldCoroutine(coroutinesProcessor);
+        helloCoroutine.start();
+        TimeUnit.SECONDS.sleep(10);
+        helloCoroutine.close();
+    }
 }
 ```
 
@@ -129,11 +126,11 @@ extends ExclusiveCoroutineBase {
 
     ...
 
-	@Override
-	protected void invokeTimedExclusively(long startTimeNanos) {
-		System.out.println("Hello world!");
-	}
-	...
+    @Override
+    protected void invokeTimedExclusively(long startTimeNanos) {
+        System.out.println("Hello world!");
+    }
+    ...
 ```
 
 ## Other Coroutine Implementations
