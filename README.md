@@ -137,5 +137,5 @@ extends ExclusiveCoroutineBase {
 
 There are some other coroutine implementations included into the library
  for the user reference. These coroutines are used in the
-[[Mongoose|https://github.com/emc-mongoose/mongoose]] project widely
+[Mongoose](https://github.com/emc-mongoose/mongoose) project widely
 and proved the coroutines approach efficiency.
