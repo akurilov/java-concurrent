@@ -1,5 +1,6 @@
 package com.github.akurilov.coroutines;
 
+import com.github.akurilov.commons.concurrent.ContextAwareThreadFactory;
 import com.github.akurilov.commons.concurrent.StoppableTask;
 
 import java.util.ArrayList;
@@ -22,7 +23,8 @@ public class CoroutinesProcessor {
 	public CoroutinesProcessor() {
 		final int svcThreadCount = Runtime.getRuntime().availableProcessors();
 		executor = new ThreadPoolExecutor(
-			svcThreadCount, svcThreadCount, 0, TimeUnit.DAYS, new ArrayBlockingQueue<>(1)
+			svcThreadCount, svcThreadCount, 0, TimeUnit.DAYS, new ArrayBlockingQueue<>(1),
+			new ContextAwareThreadFactory("coroutine-processor-", true, null)
 		);
 		for(int i = 0; i < svcThreadCount; i ++) {
 			final StoppableTask svcWorkerTask = new CoroutinesProcessorTask(coroutines);
