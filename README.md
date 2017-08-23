@@ -1,4 +1,4 @@
-# Introduction.
+# Introduction
 
 The library supporting the alternative concurrency model.
 Introduces the so called reentrant tasks (or just coroutines) which are
@@ -6,8 +6,8 @@ useful to execute a lot of periodic/long tasks using a fixed count of
 the threads.
 
 In this library, the coroutine is such stoppable and task which executes
-for some very short time avoiding any blocks multiple times (in the
-reentrant way: [coroutines](https://en.wikipedia.org/wiki/Microthread)).
+for some very short time avoiding any blocks multiple times
+([in the reentrant way](https://en.wikipedia.org/wiki/Microthread)).
 A coroutine may be invoked by the different threads at the different
 time so its fields should be thread safe. To implement the thread-safe
 coroutine the special `ExclusiveCoroutineBase` class is provided.
@@ -42,12 +42,12 @@ import com.github.akurilov.coroutines.CoroutineProcessor;
 public class HelloWorldCoroutine
 extends CoroutineBase {
 
-    public HelloWorldCoroutine(CoroutinesProcessor coroutinesProcessor) {
+    public HelloWorldCoroutine(final CoroutinesProcessor coroutinesProcessor) {
         super(coroutinesProcessor);
     }
 
     @Override
-    protected void invokeTimed(long startTimeNanos) {
+    protected void invokeTimed(final long startTimeNanos) {
         System.out.println("Hello world");
     }
 
@@ -103,6 +103,8 @@ execution. Example:
     protected void invokeTimed(long startTimeNanos) {
         for(int i = workBegin; i < workEnd; i ++) {
             doSomeUsefulWork(i);
+            // yes, I know that the statement below may invoke Satan
+            // but for simplicity it doesn't expect the negative result
             if(System.nanoTime() - startTimeNanos > TIMEOUT_NANOS) {
                 break;
             }
