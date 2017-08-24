@@ -1,18 +1,18 @@
 # Introduction
 
-The library supporting the alternative concurrency model.
-Introduces the so called reentrant tasks (or just coroutines) which are
+The library supporting the alternative concurrency model
+(coroutine-like). Introduces the so called reentrant tasks which are
 useful to execute a lot of periodic/long tasks using a fixed count of
 the threads.
 
-In this library, the coroutine is such stoppable and task which executes
+In this library, the coroutine is such stoppable task which executes
 for some very short time avoiding any blocks multiple times
 ([in the reentrant way](https://en.wikipedia.org/wiki/Microthread)).
-A coroutine may be invoked by the different threads at the different
-time so its fields should be thread safe. To implement the thread-safe
-coroutine the special `ExclusiveCoroutineBase` class is provided.
-An exclusive coroutine is being executed by only one thread at any
-moment of time.
+A basic coroutine instance may be executing by several different threads
+at any moment of time so it should have thread-safe user code. To
+implement the protected, thread-safe coroutine the special
+`ExclusiveCoroutineBase` class is provided. An exclusive coroutine is
+being executed by only one thread at any moment of time.
 
 The coroutines are executed by coroutine processors. Any coroutine
 processor has the thread-safe registry. The coroutine processor threads
