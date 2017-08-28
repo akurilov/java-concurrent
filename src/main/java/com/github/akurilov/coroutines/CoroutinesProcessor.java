@@ -1,7 +1,6 @@
 package com.github.akurilov.coroutines;
 
 import com.github.akurilov.commons.concurrent.ContextAwareThreadFactory;
-import com.github.akurilov.commons.concurrent.StoppableTask;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -71,7 +70,8 @@ public class CoroutinesProcessor {
 
 		private final Queue<Coroutine> coroutines;
 
-		private volatile boolean closedFlag = false;
+		private volatile boolean stopFlag = false;
+		private volatile boolean closeFlag = false;
 
 		private CoroutinesProcessorTask(final Queue<Coroutine> coroutines) {
 			this.coroutines = coroutines;
@@ -79,7 +79,7 @@ public class CoroutinesProcessor {
 
 		@Override
 		public final void run() {
-			while(!closedFlag) {
+			while(!stopFlag) {
 				if(coroutines.size() == 0) {
 					try {
 						Thread.sleep(1);
@@ -105,13 +105,24 @@ public class CoroutinesProcessor {
 		}
 
 		@Override
-		public final boolean isClosed() {
-			return closedFlag;
+		public final void stop() {
+			stopFlag = true;
+		}
+
+		@Override
+		public final boolean isStopped() {
+			return stopFlag;
 		}
 
 		@Override
 		public final void close() {
-			closedFlag = true;
+			stop();
+			closeFlag = true;
+		}
+
+		@Override
+		public final boolean isClosed() {
+			return closeFlag;
 		}
 	}
 }

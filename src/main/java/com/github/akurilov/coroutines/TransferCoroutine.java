@@ -11,7 +11,6 @@ import java.rmi.ConnectException;
 import java.rmi.NoSuchObjectException;
 import java.rmi.RemoteException;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 /**
  * The exclusive coroutine implementation which tries to transfer the items from the given input to the given output.
@@ -116,11 +115,6 @@ implements Coroutine {
 	@Override
 	protected final void doClose()
 	throws IOException {
-		try {
-			deferredItems.tryLock(TIMEOUT_NANOS, TimeUnit.NANOSECONDS);
-			deferredItems.clear();
-		} catch(final InterruptedException e) {
-			e.printStackTrace(System.err);
-		}
+		deferredItems.clear();
 	}
 }

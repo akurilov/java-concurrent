@@ -13,7 +13,6 @@ import java.rmi.RemoteException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
@@ -72,7 +71,7 @@ implements Output<T> {
 	@Override
 	public final int put(final List<T> srcBuff, final int from, final int to)
 	throws IOException {
-		if(isClosed()) {
+		if(isStopped()) {
 			throw new EOFException();
 		}
 		OptLockBuffer<T> buff;
@@ -182,10 +181,6 @@ implements Output<T> {
 		for(final O output : outputs) {
 			final OptLockBuffer<T> buff = buffs.get(output);
 			if(buff != null) {
-				try {
-					buff.tryLock(TIMEOUT_NANOS, TimeUnit.NANOSECONDS);
-				} catch(final InterruptedException ignored) {
-				}
 				buff.clear();
 			}
 		}

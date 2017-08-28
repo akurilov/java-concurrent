@@ -1,7 +1,5 @@
 package com.github.akurilov.coroutines;
 
-import com.github.akurilov.commons.concurrent.StoppableTask;
-
 /**
  * Base interface for all coroutines
  */
