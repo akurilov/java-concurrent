@@ -27,6 +27,7 @@ implements Coroutine {
 	private final Input<T> input;
 	private final Output<T> output;
 	private final OptLockBuffer<T> deferredItems;
+	private final int batchSize;
 
 	private int n;
 
@@ -45,6 +46,7 @@ implements Coroutine {
 		this.input = input;
 		this.output = output;
 		this.deferredItems = new OptLockArrayBuffer<>(batchSize);
+		this.batchSize = batchSize;
 	}
 
 	@Override
@@ -59,7 +61,7 @@ implements Coroutine {
 						deferredItems.clear();
 					}
 				} else {
-					n = output.put(deferredItems);
+					n = output.put(deferredItems, 0, Math.min(n, batchSize));
 					deferredItems.removeRange(0, n);
 				}
 				// do not work with new items if there were deferred items
@@ -76,12 +78,7 @@ implements Coroutine {
 							deferredItems.add(item);
 						}
 					} else {
-						final int m;
-						if(TIMEOUT_NANOS > System.nanoTime() - startTimeNanos) {
-							m = output.put(items);
-						} else { // timeout, move all items to the deferred items buffer
-							m = 0;
-						}
+						final int m = output.put(items, 0, Math.min(n, batchSize));
 						if(m < n) {
 							// not all items was transferred w/o blocking
 							// defer the remaining items for a future try
