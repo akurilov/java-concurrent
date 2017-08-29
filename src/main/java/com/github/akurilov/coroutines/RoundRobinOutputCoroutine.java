@@ -22,7 +22,7 @@ import java.util.logging.Logger;
  */
 public final class RoundRobinOutputCoroutine<T, O extends Output<T>>
 extends CoroutineBase
-implements Output<T> {
+implements OutputCoroutine<T> {
 
 	private static final Logger LOG = Logger.getLogger(RoundRobinOutputCoroutine.class.getName());
 	
