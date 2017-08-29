@@ -1,6 +1,8 @@
 package com.github.akurilov.coroutines;
 
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
+import java.util.logging.Logger;
 
 /**
  * The base class for all coroutines.
@@ -8,6 +10,8 @@ import java.io.IOException;
 public abstract class CoroutineBase
 extends StoppableTaskBase
 implements Coroutine {
+
+	private static final Logger LOG = Logger.getLogger(CoroutineBase.class.getName());
 
 	private final CoroutinesProcessor coroutinesProcessor;
 
@@ -56,6 +60,14 @@ implements Coroutine {
 	@Override
 	public final void close()
 	throws IOException {
-		super.close();
+		try {
+			if(!writeLock.tryLock(TIMEOUT_NANOS, TimeUnit.NANOSECONDS)) {
+				LOG.warning("Coroutine close timeout");
+			}
+		} catch(final InterruptedException e) {
+			LOG.severe("Coroutine close interrupted");
+		} finally {
+			doClose();
+		}
 	}
 }

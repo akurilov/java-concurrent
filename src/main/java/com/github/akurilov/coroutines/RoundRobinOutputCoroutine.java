@@ -14,6 +14,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * The coroutine implementation which acts like round robin output scattering the objects among the wrapped outputs.
@@ -21,6 +23,8 @@ import java.util.concurrent.atomic.AtomicLong;
 public final class RoundRobinOutputCoroutine<T, O extends Output<T>>
 extends CoroutineBase
 implements Output<T> {
+
+	private static final Logger LOG = Logger.getLogger(RoundRobinOutputCoroutine.class.getName());
 	
 	private final List<O> outputs;
 	private final int outputsCount;
@@ -53,7 +57,7 @@ implements Output<T> {
 	@Override
 	public final boolean put(final T ioTask)
 	throws IOException {
-		if(isClosed()) {
+		if(isStopped()) {
 			throw new EOFException();
 		}
 		final OptLockBuffer<T> buff = selectBuff();
@@ -160,10 +164,10 @@ implements Output<T> {
 			} catch(final RemoteException e) {
 				final Throwable cause = e.getCause();
 				if(!(cause instanceof EOFException)) {
-					e.printStackTrace(System.err);
+					LOG.log(Level.WARNING, "Invocation ailure", e);
 				}
 			} catch(final Throwable t) {
-				t.printStackTrace(System.err);
+				LOG.log(Level.WARNING, "Invocation ailure", t);
 			} finally {
 				buff.unlock();
 			}

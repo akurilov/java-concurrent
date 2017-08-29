@@ -9,11 +9,15 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * The coroutines executor. It's suggested to use a single/global/shared executor instance per application.
  */
 public class CoroutinesProcessor {
+
+	private final static Logger LOG = Logger.getLogger(CoroutinesProcessor.class.getName());
 
 	private final ThreadPoolExecutor executor;
 	private final List<StoppableTask> workers = new ArrayList<>();
@@ -88,14 +92,11 @@ public class CoroutinesProcessor {
 					}
 				} else {
 					for(final Coroutine nextCoroutine : coroutines) {
-						if(!nextCoroutine.isClosed()) {
+						if(!nextCoroutine.isStopped()) {
 							try {
 								nextCoroutine.run();
 							} catch(final Throwable t) {
-								synchronized(System.err) {
-									System.err.println("Coroutine \"" + nextCoroutine + "\" failed:");
-									t.printStackTrace(System.err);
-								}
+								LOG.log(Level.WARNING, "Coroutine \"" + nextCoroutine + "\" failed", t);
 							}
 							//LockSupport.parkNanos(1);
 						}

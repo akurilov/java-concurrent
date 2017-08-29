@@ -11,6 +11,8 @@ import java.rmi.ConnectException;
 import java.rmi.NoSuchObjectException;
 import java.rmi.RemoteException;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * The exclusive coroutine implementation which tries to transfer the items from the given input to the given output.
@@ -19,6 +21,8 @@ import java.util.List;
 public class TransferCoroutine<T>
 extends ExclusiveCoroutineBase
 implements Coroutine {
+
+	private static final Logger LOG = Logger.getLogger(TransferCoroutine.class.getName());
 
 	private final Input<T> input;
 	private final Output<T> output;
@@ -94,7 +98,7 @@ implements Coroutine {
 			try {
 				close();
 			} catch(final IOException ee) {
-				ee.printStackTrace(System.err);
+				LOG.log(Level.WARNING, "Failed to close self", ee);
 			}
 		} catch(final RemoteException e) {
 			final Throwable cause = e.getCause();
@@ -102,13 +106,13 @@ implements Coroutine {
 				try {
 					close();
 				} catch(final IOException ee) {
-					ee.printStackTrace(System.err);
+					LOG.log(Level.WARNING, "Failed to close self", ee);
 				}
 			} else {
-				e.printStackTrace(System.err);
+				LOG.log(Level.WARNING, "Invocation failure", e);
 			}
 		} catch(final IOException e) {
-			e.printStackTrace(System.err);
+			LOG.log(Level.WARNING, "Invocation failure", e);
 		}
 	}
 
