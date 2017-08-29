@@ -15,8 +15,6 @@ implements Coroutine {
 
 	private final CoroutinesProcessor coroutinesProcessor;
 
-	private volatile boolean stoppedFlag = false;
-
 	protected CoroutineBase(final CoroutinesProcessor coroutinesProcessor) {
 		this.coroutinesProcessor = coroutinesProcessor;
 	}
@@ -42,24 +40,19 @@ implements Coroutine {
 	 */
 	protected abstract void invokeTimed(final long startTimeNanos);
 
-	/**
-	 * Soft stop. Prevent the task for further invocations.
-	 * Current invocation (if executing) remains active until its end.
-	 */
 	@Override
-	public final void stop() {
+	protected void doStop() {
 		coroutinesProcessor.stop(this);
-		stoppedFlag = true;
 	}
 
-	@Override
-	public final boolean isStopped() {
-		return stoppedFlag;
-	}
-
+	/**
+	 * Attempts to wait before the actual closing if locked.
+	 * @throws IOException
+	 */
 	@Override
 	public final void close()
 	throws IOException {
+		stop();
 		try {
 			if(!writeLock.tryLock(TIMEOUT_NANOS, TimeUnit.NANOSECONDS)) {
 				LOG.warning("Coroutine close timeout");

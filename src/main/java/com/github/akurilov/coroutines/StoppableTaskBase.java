@@ -11,13 +11,15 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 public abstract class StoppableTaskBase
 implements StoppableTask {
 
-	private final ReadWriteLock readWriteLock = new ReentrantReadWriteLock();
+	private final ReadWriteLock readWriteLock = new ReentrantReadWriteLock(true);
 	protected final Lock readLock = readWriteLock.readLock();
 	protected final Lock writeLock = readWriteLock.writeLock();
 
+	private volatile boolean stoppedFlag = false;
+
 	@Override
 	public void run() {
-		if(readLock.tryLock()) {
+		if(!stoppedFlag && readLock.tryLock()) {
 			try {
 				invoke();
 			} finally {
@@ -26,27 +28,44 @@ implements StoppableTask {
 		}
 	}
 
+	/**
+	 * Soft stop. Prevent the task for further invocations.
+	 * Current invocation (if executing) remains active until its end.
+	 */
 	@Override
-	public abstract void stop();
+	public final void stop() {
+		stoppedFlag = true;
+		doStop();
+	}
+
+	protected abstract void doStop();
 
 	@Override
-	public abstract boolean isStopped();
+	public final boolean isStopped() {
+		return stoppedFlag;
+	}
 
+	/**
+	 * Thread-safe close method. Fails if the task is running/closed throwing an exception.
+	 * @throws IOException
+	 * @throws IllegalStateException if the task was locked by run() method either closed before
+	 */
 	@Override
 	public void close()
 	throws IOException {
+		stop();
 		if(!writeLock.tryLock()) {
-			throw new IllegalStateException();
+			throw new IllegalStateException("Task is locked");
 		}
 	}
 
 	@Override
 	public final boolean isClosed() {
-		final boolean writeLocked = writeLock.tryLock();
-		if(writeLocked) {
+		final boolean writeWasLocked = !writeLock.tryLock();
+		if(!writeWasLocked) {
 			writeLock.unlock();
 		}
-		return !writeLocked;
+		return stoppedFlag && writeWasLocked;
 	}
 
 	/**

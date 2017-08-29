@@ -61,7 +61,7 @@ implements Output<T> {
 			throw new EOFException();
 		}
 		final OptLockBuffer<T> buff = selectBuff();
-		if(buff.tryLock()) {
+		if(buff != null && buff.tryLock()) {
 			try {
 				return buff.size() < buffCapacity && buff.add(ioTask);
 			} finally {
@@ -85,7 +85,7 @@ implements Output<T> {
 			int nextFrom = from;
 			for(int i = 0; i < outputsCount; i ++) {
 				buff = selectBuff();
-				if(buff.tryLock()) {
+				if(buff != null && buff.tryLock()) {
 					try {
 						final int m = Math.min(nPerOutput, buffCapacity - buff.size());
 						for(final T item : srcBuff.subList(nextFrom, nextFrom + m)) {
@@ -99,7 +99,7 @@ implements Output<T> {
 			}
 			if(nextFrom < to) {
 				buff = selectBuff();
-				if(buff.tryLock()) {
+				if(buff != null && buff.tryLock()) {
 					try {
 						final int m = Math.min(to - nextFrom, buffCapacity - buff.size());
 						for(final T item : srcBuff.subList(nextFrom, nextFrom + m)) {
@@ -115,7 +115,7 @@ implements Output<T> {
 		} else {
 			for(int i = from; i < to; i ++) {
 				buff = selectBuff();
-				if(buff.tryLock()) {
+				if(buff != null && buff.tryLock()) {
 					try {
 						if(buff.size() < buffCapacity) {
 							buff.add(srcBuff.get(i));
