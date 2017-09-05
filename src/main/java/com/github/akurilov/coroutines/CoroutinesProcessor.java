@@ -14,24 +14,35 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * The coroutines executor. It's suggested to use a single/global/shared executor instance per application.
+ * The coroutines executor. It's suggested to use a single/global/shared executor instance per
+ * application. By default the background coroutines executor is created. The normal coroutines
+ * executor with higher scheduling priority may be created using the custom constructor with
+ * <i>false</i> argument.
  */
 public class CoroutinesProcessor {
 
 	private final static Logger LOG = Logger.getLogger(CoroutinesProcessor.class.getName());
 
 	private final ThreadPoolExecutor executor;
+	private final boolean backgroundFlag;
 	private final List<StoppableTask> workers = new ArrayList<>();
 	private final Queue<Coroutine> coroutines = new ConcurrentLinkedQueue<>();
 
 	public CoroutinesProcessor() {
+		this(true);
+	}
+
+	public CoroutinesProcessor(final boolean backgroundFlag) {
 		final int svcThreadCount = Runtime.getRuntime().availableProcessors();
 		executor = new ThreadPoolExecutor(
 			svcThreadCount, svcThreadCount, 0, TimeUnit.DAYS, new ArrayBlockingQueue<>(1),
 			new ContextAwareThreadFactory("coroutine-processor-", true, null)
 		);
+		this.backgroundFlag = backgroundFlag;
 		for(int i = 0; i < svcThreadCount; i ++) {
-			final StoppableTask svcWorkerTask = new CoroutinesProcessorTask(coroutines);
+			final StoppableTask svcWorkerTask = new CoroutinesProcessorTask(
+				coroutines, backgroundFlag
+			);
 			executor.submit(svcWorkerTask);
 			workers.add(svcWorkerTask);
 		}
@@ -54,7 +65,9 @@ public class CoroutinesProcessor {
 			executor.setMaximumPoolSize(newThreadCount);
 			if(newThreadCount > oldThreadCount) {
 				for(int i = oldThreadCount; i < newThreadCount; i ++) {
-					final StoppableTask procTask = new CoroutinesProcessorTask(coroutines);
+					final StoppableTask procTask = new CoroutinesProcessorTask(
+						coroutines, backgroundFlag
+					);
 					executor.submit(procTask);
 					workers.add(procTask);
 				}
@@ -74,34 +87,64 @@ public class CoroutinesProcessor {
 	implements StoppableTask {
 
 		private final Queue<Coroutine> coroutines;
+		private final boolean backgroundFlag;
 
 		private volatile boolean stopFlag = false;
 		private volatile boolean closeFlag = false;
 
-		private CoroutinesProcessorTask(final Queue<Coroutine> coroutines) {
+		private CoroutinesProcessorTask(
+			final Queue<Coroutine> coroutines, final boolean backgroundFlag
+		) {
 			this.coroutines = coroutines;
+			this.backgroundFlag = backgroundFlag;
 		}
 
 		@Override
 		public final void run() {
-			while(!stopFlag) {
-				if(coroutines.size() == 0) {
-					try {
-						Thread.sleep(1);
-					} catch(final InterruptedException e) {
-						break;
-					}
-				} else {
-					for(final Coroutine nextCoroutine : coroutines) {
-						if(!nextCoroutine.isStopped()) {
-							try {
-								nextCoroutine.run();
-							} catch(final Throwable t) {
-								LOG.log(
-									Level.WARNING, "Coroutine \"" + nextCoroutine + "\" failed", t
-								);
+			if(backgroundFlag) {
+				while(!stopFlag) {
+					if(coroutines.size() == 0) {
+						try {
+							Thread.sleep(1);
+						} catch(final InterruptedException e) {
+							break;
+						}
+					} else {
+						for(final Coroutine nextCoroutine : coroutines) {
+							if(!nextCoroutine.isStopped()) {
+								try {
+									nextCoroutine.run();
+								} catch(final Throwable t) {
+									LOG.log(
+										Level.WARNING, "Coroutine \"" + nextCoroutine + "\" failed",
+										t
+									);
+								}
+								LockSupport.parkNanos(1);
 							}
-							LockSupport.parkNanos(1);
+						}
+					}
+				}
+			} else {
+				while(!stopFlag) {
+					if(coroutines.size() == 0) {
+						try {
+							Thread.sleep(1);
+						} catch(final InterruptedException e) {
+							break;
+						}
+					} else {
+						for(final Coroutine nextCoroutine : coroutines) {
+							if(!nextCoroutine.isStopped()) {
+								try {
+									nextCoroutine.run();
+								} catch(final Throwable t) {
+									LOG.log(
+										Level.WARNING, "Coroutine \"" + nextCoroutine + "\" failed",
+										t
+									);
+								}
+							}
 						}
 					}
 				}
