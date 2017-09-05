@@ -18,7 +18,7 @@ import java.util.logging.Logger;
  */
 public class CoroutinesProcessor {
 
-	private static final Logger LOG = Logger.getLogger(CoroutinesProcessor.class.getName());
+	private final static Logger LOG = Logger.getLogger(CoroutinesProcessor.class.getName());
 
 	private final ThreadPoolExecutor executor;
 	private final List<StoppableTask> workers = new ArrayList<>();
@@ -93,7 +93,7 @@ public class CoroutinesProcessor {
 					}
 				} else {
 					for(final Coroutine nextCoroutine : coroutines) {
-						if(!nextCoroutine.isClosed()) {
+						if(!nextCoroutine.isStopped()) {
 							try {
 								nextCoroutine.run();
 							} catch(final Throwable t) {

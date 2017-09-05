@@ -1,6 +1,8 @@
 package com.github.akurilov.coroutines;
 
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
+import java.util.logging.Logger;
 
 /**
  * The base class for all coroutines.
@@ -9,9 +11,9 @@ public abstract class CoroutineBase
 extends StoppableTaskBase
 implements Coroutine {
 
-	private final CoroutinesProcessor coroutinesProcessor;
+	private static final Logger LOG = Logger.getLogger(CoroutineBase.class.getName());
 
-	private volatile boolean stoppedFlag = false;
+	private final CoroutinesProcessor coroutinesProcessor;
 
 	protected CoroutineBase(final CoroutinesProcessor coroutinesProcessor) {
 		this.coroutinesProcessor = coroutinesProcessor;
@@ -38,24 +40,27 @@ implements Coroutine {
 	 */
 	protected abstract void invokeTimed(final long startTimeNanos);
 
-	/**
-	 * Soft stop. Prevent the task for further invocations.
-	 * Current invocation (if executing) remains active until its end.
-	 */
 	@Override
-	public final void stop() {
+	protected void doStop() {
 		coroutinesProcessor.stop(this);
-		stoppedFlag = true;
 	}
 
-	@Override
-	public final boolean isStopped() {
-		return stoppedFlag;
-	}
-
+	/**
+	 * Attempts to wait before the actual closing if locked.
+	 * @throws IOException
+	 */
 	@Override
 	public final void close()
 	throws IOException {
-		super.close();
+		stop();
+		try {
+			if(!writeLock.tryLock(TIMEOUT_NANOS, TimeUnit.NANOSECONDS)) {
+				LOG.warning("Coroutine close timeout");
+			}
+		} catch(final InterruptedException e) {
+			LOG.severe("Coroutine close interrupted");
+		} finally {
+			doClose();
+		}
 	}
 }
