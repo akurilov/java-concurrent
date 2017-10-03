@@ -164,10 +164,10 @@ implements OutputCoroutine<T> {
 			} catch(final RemoteException e) {
 				final Throwable cause = e.getCause();
 				if(!(cause instanceof EOFException)) {
-					LOG.log(Level.WARNING, "Invocation ailure", e);
+					LOG.log(Level.WARNING, "Invocation failure", e);
 				}
 			} catch(final Throwable t) {
-				LOG.log(Level.WARNING, "Invocation ailure", t);
+				LOG.log(Level.WARNING, "Invocation failure", t);
 			} finally {
 				buff.unlock();
 			}
