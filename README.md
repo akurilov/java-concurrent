@@ -25,7 +25,7 @@ executed concurrently also.
 ## Gradle
 
 ```groovy
-compile group: 'com.github.akurilov', name: 'java-coroutines', version: '1.1.3'
+compile group: 'com.github.akurilov', name: 'java-concurrent', version: '1.1.4'
 ```
 
 ## Implementing Basic Coroutine
@@ -34,10 +34,10 @@ To implement the simpliest coroutine one should extend the
 `CoroutineBase` class:
 
 ```java
-package com.github.akurilov.coroutines.example;
+package com.github.akurilov.concurrent.coroutines.example;
 
-import com.github.akurilov.coroutines.CoroutineBase;
-import com.github.akurilov.coroutines.CoroutineProcessor;
+import com.github.akurilov.concurrent.coroutines.CoroutineBase;
+import com.github.akurilov.concurrent.coroutines.CoroutineProcessor;
 
 public class HelloWorldCoroutine
 extends CoroutineBase {
@@ -63,10 +63,10 @@ The method `invokeTimed` does the useful work. The example code below
 utilizes that coroutine:
 
 ```java
-package com.github.akurilov.coroutines.example;
+package com.github.akurilov.concurrent.coroutines.example;
 
-import com.github.akurilov.coroutines.Coroutine;
-import com.github.akurilov.coroutines.CoroutinesProcessor;
+import com.github.akurilov.concurrent.coroutines.Coroutine;
+import com.github.akurilov.concurrent.coroutines.CoroutinesProcessor;
 
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
@@ -116,10 +116,10 @@ An exclusive coroutine is restricted by a single thread. It allows:
 * Don't care of thread safety
 
 ```java
-package com.github.akurilov.coroutines.example;
+package com.github.akurilov.concurrent.coroutines.example;
 
 ...
-import com.github.akurilov.coroutines.ExclusiveCoroutineBase;
+import com.github.akurilov.concurrent.coroutines.ExclusiveCoroutineBase;
 
 public class HelloWorldExclusiveCoroutine
 extends ExclusiveCoroutineBase {
@@ -137,5 +137,5 @@ extends ExclusiveCoroutineBase {
 
 There are some other coroutine implementations included into the library
  for the user reference. These coroutines are used in the
-[Mongoose](https://github.com/emc-mongoose/mongoose) project widely
+[Mongoose](https://github.com/emc-mongoose/mongoose-base) project widely
 and proved the coroutines approach efficiency.
