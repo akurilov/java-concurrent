@@ -137,9 +137,11 @@ implements AsyncRunnable {
 		}
 		// then close actually
 		synchronized(state) {
-			doClose();
-			stateRef.set(null);
-			state.notifyAll();
+			if(null != stateRef.get()) {
+				doClose();
+				stateRef.set(null);
+				state.notifyAll();
+			}
 		}
 	}
 
