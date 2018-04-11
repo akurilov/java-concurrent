@@ -28,13 +28,13 @@ public final class WeightThrottle {
 
 	private void resetRemainingWeights()
 	throws IllegalArgumentException {
-		for(final int key : weightKeys) {
+		for(final var key : weightKeys) {
 			remainingWeightMap.put(key, weightMap.get(key));
 		}
 	}
 
 	private void ensureRemainingWeights() {
-		for(final int key : weightKeys) {
+		for(final var key : weightKeys) {
 			if(remainingWeightMap.get(key) > 0) {
 				return;
 			}
@@ -45,7 +45,7 @@ public final class WeightThrottle {
 	public final boolean tryAcquire(final int key) {
 		synchronized(remainingWeightMap) {
 			ensureRemainingWeights();
-			final int remainingWeight = remainingWeightMap.get(key);
+			final var remainingWeight = remainingWeightMap.get(key);
 			if(remainingWeight > 0) {
 				remainingWeightMap.put(key, remainingWeight - 1);
 				return true;
@@ -61,7 +61,7 @@ public final class WeightThrottle {
 		}
 		synchronized(remainingWeightMap) {
 			ensureRemainingWeights();
-			final int remainingWeight = remainingWeightMap.get(key);
+			final var remainingWeight = remainingWeightMap.get(key);
 			if(times > remainingWeight) {
 				remainingWeightMap.put(key, 0);
 				return remainingWeight;

@@ -1,5 +1,6 @@
-package com.github.akurilov.concurrent;
+package com.github.akurilov.concurrent.test;
 
+import com.github.akurilov.concurrent.RateThrottle;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 

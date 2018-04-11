@@ -22,14 +22,17 @@ implements ThreadFactory {
 	protected final boolean daemonFlag;
 	protected final Map<String, String> threadContext;
 
-	public ContextAwareThreadFactory(final String threadNamePrefix, final Map<String, String> threadContext) {
+	public ContextAwareThreadFactory(
+		final String threadNamePrefix, final Map<String, String> threadContext
+	) {
 		this.threadNamePrefix = threadNamePrefix;
 		this.daemonFlag = false;
 		this.threadContext = threadContext;
 	}
 
 	public ContextAwareThreadFactory(
-		final String threadNamePrefix, final boolean daemonFlag, final Map<String, String> threadContext
+		final String threadNamePrefix, final boolean daemonFlag,
+		final Map<String, String> threadContext
 	) {
 		this.threadNamePrefix = threadNamePrefix;
 		this.daemonFlag = daemonFlag;
@@ -55,7 +58,8 @@ implements ThreadFactory {
 	@Override
 	public Thread newThread(final Runnable task) {
 		return new ContextAwareThread(
-			task, threadNamePrefix + "#" + threadNumber.incrementAndGet(), daemonFlag, exceptionHandler, threadContext
+			task, threadNamePrefix + "#" + threadNumber.incrementAndGet(), daemonFlag,
+			exceptionHandler, threadContext
 		);
 	}
 

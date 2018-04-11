@@ -114,8 +114,8 @@ implements AsyncRunnable {
 	@Override
 	public boolean await(final long timeout, final TimeUnit timeUnit)
 	throws IllegalStateException, InterruptedException {
-		long t, timeOutMilliSec = timeUnit.toMillis(timeout);
-		t = System.currentTimeMillis();
+		final var timeOutMilliSec = timeUnit.toMillis(timeout);
+		final var t = System.currentTimeMillis();
 		while(isStarted() || isShutdown()) {
 			if(System.currentTimeMillis() - t >= timeOutMilliSec) {
 				return false;

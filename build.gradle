@@ -1,4 +1,4 @@
-description = "The library supporting the alternative concurrency model"
+description = "The concurrency library which includes the coroutines functionality"
 
 buildscript {
 	repositories {
@@ -11,30 +11,60 @@ allprojects {
 	apply plugin: "maven"
 	apply plugin: "signing"
 	group = "com.github.akurilov"
-	version = "1.1.5"
+	version = "2.0.0"
 }
 
-tasks.withType(JavaCompile) {
-	sourceCompatibility = JavaVersion.VERSION_1_8
-	targetCompatibility = JavaVersion.VERSION_1_8
-}
+ext.moduleName = "${group}.concurrent"
 
 repositories {
 	mavenCentral()
 }
 
 dependencies {
-	compile("com.github.akurilov:java-commons:[1.4.7,)")
+	compile("com.github.akurilov:java-commons:[2.0.0,)")
 	testCompile("junit:junit:4.12")
 }
 
+compileJava {
+	sourceCompatibility = JavaVersion.VERSION_1_10
+	targetCompatibility = JavaVersion.VERSION_1_10
+	inputs.property("moduleName", moduleName)
+	doFirst {
+		options.compilerArgs = [
+			"--module-path", classpath.asPath,
+		]
+		classpath = files()
+	}
+}
+
+compileTestJava {
+	sourceCompatibility = JavaVersion.VERSION_1_10
+	targetCompatibility = JavaVersion.VERSION_1_10
+	inputs.property("moduleName", moduleName)
+	doFirst {
+		options.compilerArgs = [
+			"--module-path", classpath.asPath,
+			"--add-modules", "ALL-MODULE-PATH",
+			"--add-reads", "${moduleName}.test=junit",
+			"--patch-module", "$moduleName=" + files(sourceSets.test.java.outputDir).asPath,
+		]
+		classpath = files()
+	}
+}
+
 jar {
+	inputs.property("moduleName", moduleName)
 	manifest {
 		attributes (
+			"Automatic-Module-Name": moduleName,
 			"Implementation-Version": version,
 			"Implementation-Title": rootProject.name,
 		)
 	}
+}
+
+javadoc {
+	options.addStringOption("-module-path", classpath.asPath)
 }
 
 task sourcesJar(type: Jar, dependsOn: classes) {
@@ -137,7 +167,7 @@ uploadArchives {
 }
 
 task wrapper(type: Wrapper) {
-	gradleVersion = "3.5"
+	gradleVersion = "4.6"
 }
 
 task printVersion {

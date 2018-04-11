@@ -30,7 +30,7 @@ implements Throttle<X> {
 	public final boolean tryAcquire(final X item) {
 		synchronized(this) {
 			if(startTime > 0) {
-				final long periodCount = (nanoTime() - startTime) / periodNanos;
+				final var periodCount = (nanoTime() - startTime) / periodNanos;
 				if(periodCount > acquiredCount) {
 					acquiredCount ++;
 					return true;
@@ -49,7 +49,7 @@ implements Throttle<X> {
 	public final int tryAcquire(final X item, final int requiredCount) {
 		synchronized(this) {
 			if(startTime > 0) {
-				final int availableCount = (int) (
+				final var availableCount = (int) (
 					(nanoTime() - startTime) / periodNanos - acquiredCount
 				);
 				if(availableCount > requiredCount) {

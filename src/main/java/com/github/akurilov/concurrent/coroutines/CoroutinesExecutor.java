@@ -31,16 +31,14 @@ public class CoroutinesExecutor {
 	}
 
 	public CoroutinesExecutor(final boolean backgroundFlag) {
-		final int svcThreadCount = Runtime.getRuntime().availableProcessors();
+		final var svcThreadCount = Runtime.getRuntime().availableProcessors();
 		executor = new ThreadPoolExecutor(
 			svcThreadCount, svcThreadCount, 0, TimeUnit.DAYS, new ArrayBlockingQueue<>(1),
 			new ContextAwareThreadFactory("coroutine-processor-", true, null)
 		);
 		this.backgroundFlag = backgroundFlag;
-		for(int i = 0; i < svcThreadCount; i ++) {
-			final CoroutinesExecutorTask svcWorkerTask = new CoroutinesExecutorTask(
-				coroutines, backgroundFlag
-			);
+		for(var i = 0; i < svcThreadCount; i ++) {
+			final var svcWorkerTask = new CoroutinesExecutorTask(coroutines, backgroundFlag);
 			executor.submit(svcWorkerTask);
 			workers.add(svcWorkerTask);
 			svcWorkerTask.start();
@@ -56,24 +54,22 @@ public class CoroutinesExecutor {
 	}
 
 	public void setThreadCount(final int threadCount) {
-		final int newThreadCount = threadCount > 0 ?
+		final var newThreadCount = threadCount > 0 ?
 			threadCount : Runtime.getRuntime().availableProcessors();
-		final int oldThreadCount = executor.getCorePoolSize();
+		final var oldThreadCount = executor.getCorePoolSize();
 		if(newThreadCount != oldThreadCount) {
 			executor.setCorePoolSize(newThreadCount);
 			executor.setMaximumPoolSize(newThreadCount);
 			if(newThreadCount > oldThreadCount) {
-				for(int i = oldThreadCount; i < newThreadCount; i ++) {
-					final CoroutinesExecutorTask execTask = new CoroutinesExecutorTask(
-						coroutines, backgroundFlag
-					);
+				for(var i = oldThreadCount; i < newThreadCount; i ++) {
+					final var execTask = new CoroutinesExecutorTask(coroutines, backgroundFlag);
 					executor.submit(execTask);
 					workers.add(execTask);
 					execTask.start();
 				}
 			} else { // less, remove some active service worker tasks
 				try {
-					for(int i = oldThreadCount - 1; i >= newThreadCount; i --) {
+					for(var i = oldThreadCount - 1; i >= newThreadCount; i --) {
 						workers.remove(i).close();
 					}
 				} catch (final Exception e) {

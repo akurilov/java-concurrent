@@ -1,5 +1,6 @@
-package com.github.akurilov.concurrent;
+package com.github.akurilov.concurrent.test;
 
+import com.github.akurilov.concurrent.WeightThrottle;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;

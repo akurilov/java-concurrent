@@ -29,7 +29,7 @@ implements Coroutine {
 	 */
 	@Override
 	public final void invoke() {
-		long t = System.nanoTime();
+		var t = System.nanoTime();
 		invokeTimed(t);
 	}
 

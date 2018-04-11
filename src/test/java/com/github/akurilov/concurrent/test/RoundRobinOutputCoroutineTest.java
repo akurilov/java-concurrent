@@ -1,10 +1,10 @@
-package com.github.akurilov.concurrent.coroutines;
+package com.github.akurilov.concurrent.test;
 
 import com.github.akurilov.commons.io.Input;
 import com.github.akurilov.commons.io.Output;
 
 import com.github.akurilov.concurrent.coroutines.CoroutinesExecutor;
-
+import com.github.akurilov.concurrent.coroutines.RoundRobinOutputCoroutine;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;

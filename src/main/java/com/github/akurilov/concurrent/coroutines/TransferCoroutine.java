@@ -68,21 +68,21 @@ implements Coroutine {
 				return;
 			}
 
-			final List<T> items = input.getAll();
+			final var items = input.getAll();
 			if(items != null) {
 				n = items.size();
 				if(n > 0) {
 					if(n == 1) {
-						final T item = items.get(0);
+						final var item = items.get(0);
 						if(!output.put(item)) {
 							deferredItems.add(item);
 						}
 					} else {
-						final int m = output.put(items, 0, Math.min(n, batchSize));
+						final var m = output.put(items, 0, Math.min(n, batchSize));
 						if(m < n) {
 							// not all items was transferred w/o blocking
 							// defer the remaining items for a future try
-							for(final T item : items.subList(m, n)) {
+							for(final var item : items.subList(m, n)) {
 								deferredItems.add(item);
 							}
 						}
@@ -98,7 +98,7 @@ implements Coroutine {
 				LOG.log(Level.WARNING, "Failed to close self after EOF", ee);
 			}
 		} catch(final RemoteException e) {
-			final Throwable cause = e.getCause();
+			final var cause = e.getCause();
 			if(cause instanceof EOFException) {
 				try {
 					close();
