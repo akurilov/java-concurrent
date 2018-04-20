@@ -1,11 +1,6 @@
 package com.github.akurilov.concurrent.test;
 
 import com.github.akurilov.concurrent.SequentialWeightsThrottle;
-import it.unimi.dsi.fastutil.ints.Int2IntMap;
-import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
-import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
-import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
-
 import org.junit.Test;
 
 import java.util.concurrent.ExecutorService;
@@ -22,37 +17,31 @@ import static org.junit.Assert.assertEquals;
 
 public class SequentialWeightsThrottleTest {
 
-	private enum IoType {
-		CREATE, READ
-	}
+	private static final int WRITE = 0;
+	private static final int READ = 1;
 
-	private final Int2IntMap weightMap = new Int2IntOpenHashMap() {
-		{
-			put(IoType.CREATE.ordinal(), 80);
-			put(IoType.READ.ordinal(), 20);
-		}
+	private final int[] weights = new int[] {
+		80,
+		20
+	};
+	private final LongAdder[] resultCounters = new LongAdder[] {
+		new LongAdder(),
+		new LongAdder()
 	};
 
-	private final Int2ObjectMap<LongAdder> resultsMap = new Int2ObjectOpenHashMap<LongAdder>() {
-		{
-			put(IoType.CREATE.ordinal(), new LongAdder());
-			put(IoType.READ.ordinal(), new LongAdder());
-		}
-	};
-
-	private final SequentialWeightsThrottle wt = new SequentialWeightsThrottle(weightMap);
+	private final SequentialWeightsThrottle wt = new SequentialWeightsThrottle(weights);
 
 	private final class SubmTask
 		implements Runnable {
-		private final IoType ioType;
-		public SubmTask(final IoType ioType) {
-			this.ioType = ioType;
+		private final int origin;
+		public SubmTask(final int origin) {
+			this.origin = origin;
 		}
 		@Override
 		public final void run() {
 			while(true) {
-				if(wt.tryAcquire(ioType.ordinal())) {
-					resultsMap.get(ioType.ordinal()).increment();
+				if(wt.tryAcquire(origin)) {
+					resultCounters[origin].increment();
 				} else {
 					LockSupport.parkNanos(1);
 				}
@@ -64,29 +53,29 @@ public class SequentialWeightsThrottleTest {
 	public void testRequestApprovalFor()
 	throws Exception {
 		final ExecutorService es = Executors.newFixedThreadPool(2);
-		es.submit(new SubmTask(IoType.CREATE));
-		es.submit(new SubmTask(IoType.READ));
+		es.submit(new SubmTask(WRITE));
+		es.submit(new SubmTask(READ));
 		es.awaitTermination(10, TimeUnit.SECONDS);
 		es.shutdownNow();
-		final double writes = resultsMap.get(IoType.CREATE.ordinal()).sum();
-		final long reads = resultsMap.get(IoType.READ.ordinal()).sum();
+		final double writes = resultCounters[WRITE].sum();
+		final long reads = resultCounters[READ].sum();
 		assertEquals(80/20, writes / reads, 0.01);
 		System.out.println("Write rate: " + writes / 10 + " Hz, read rate: " + reads / 10 + " Hz");
 	}
 
 	private final class BatchSubmTask
 	implements Runnable {
-		private final IoType ioType;
-		public BatchSubmTask(final IoType ioType) {
-			this.ioType = ioType;
+		private final int origin;
+		public BatchSubmTask(final int origin) {
+			this.origin = origin;
 		}
 		@Override
 		public final void run() {
 			int n;
 			while(true) {
-				n = wt.tryAcquire(ioType.ordinal(), 128);
+				n = wt.tryAcquire(origin, 128);
 				if(n > 0) {
-					resultsMap.get(ioType.ordinal()).add(n);
+					resultCounters[origin].add(n);
 				} else {
 					LockSupport.parkNanos(1);
 				}
@@ -98,12 +87,12 @@ public class SequentialWeightsThrottleTest {
 	public void testRequestBatchApprovalFor()
 	throws Exception {
 		final ExecutorService es = Executors.newFixedThreadPool(2);
-		es.submit(new BatchSubmTask(IoType.CREATE));
-		es.submit(new BatchSubmTask(IoType.READ));
+		es.submit(new BatchSubmTask(WRITE));
+		es.submit(new BatchSubmTask(READ));
 		es.awaitTermination(10, TimeUnit.SECONDS);
 		es.shutdownNow();
-		final double writes = resultsMap.get(IoType.CREATE.ordinal()).sum();
-		final long reads = resultsMap.get(IoType.READ.ordinal()).sum();
+		final double writes = resultCounters[WRITE].sum();
+		final long reads = resultCounters[READ].sum();
 		assertEquals(80/20, writes / reads, 0.01);
 		System.out.println("Write rate: " + writes / 10 + " Hz, read rate: " + reads / 10 + " Hz");
 	}
