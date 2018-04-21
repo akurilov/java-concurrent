@@ -8,7 +8,8 @@ import java.util.Arrays;
  The throttle determines the weight for each I/O task and makes the decision.
  The weight is used to pass the I/O task with specific ratio for the different keys.
  */
-public final class SequentialWeightsThrottle {
+public final class SequentialWeightsThrottle
+implements IndexThrottle {
 
 	// initial weight map (constant)
 	private final int[] weights;
