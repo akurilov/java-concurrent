@@ -25,7 +25,7 @@ executed concurrently also.
 ## Gradle
 
 ```groovy
-compile group: 'com.github.akurilov', name: 'java-concurrent', version: '2.0.1'
+compile group: 'com.github.akurilov', name: 'java-concurrent', version: '2.0.2'
 ```
 
 ## Implementing Basic Coroutine
