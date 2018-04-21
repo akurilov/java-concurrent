@@ -41,7 +41,7 @@ implements OutputCoroutine<T> {
 		this.outputsCount = outputs.size();
 		this.buffCapacity = buffCapacity;
 		this.buffs = new HashMap<>(this.outputsCount);
-		for(var i = 0; i < this.outputsCount; i ++) {
+		for(int i = 0; i < this.outputsCount; i ++) {
 			this.buffs.put(outputs.get(i), new OptLockArrayBuffer<>(buffCapacity));
 		}
 	}
@@ -60,7 +60,7 @@ implements OutputCoroutine<T> {
 		if(isStopped()) {
 			throw new EOFException();
 		}
-		final var buff = selectBuff();
+		final OptLockBuffer<T> buff = selectBuff();
 		if(buff != null && buff.tryLock()) {
 			try {
 				return buff.size() < buffCapacity && buff.add(ioTask);
@@ -79,16 +79,16 @@ implements OutputCoroutine<T> {
 			throw new EOFException();
 		}
 		OptLockBuffer<T> buff;
-		final var n = to - from;
+		final int n = to - from;
 		if(n > outputsCount) {
-			final var nPerOutput = n / outputsCount;
-			var nextFrom = from;
-			for(var i = 0; i < outputsCount; i ++) {
+			final int nPerOutput = n / outputsCount;
+			int nextFrom = from;
+			for(int i = 0; i < outputsCount; i ++) {
 				buff = selectBuff();
 				if(buff != null && buff.tryLock()) {
 					try {
-						final var m = Math.min(nPerOutput, buffCapacity - buff.size());
-						for(final var item : srcBuff.subList(nextFrom, nextFrom + m)) {
+						final int m = Math.min(nPerOutput, buffCapacity - buff.size());
+						for(final T item : srcBuff.subList(nextFrom, nextFrom + m)) {
 							buff.add(item);
 						}
 						nextFrom += m;
@@ -101,8 +101,8 @@ implements OutputCoroutine<T> {
 				buff = selectBuff();
 				if(buff != null && buff.tryLock()) {
 					try {
-						final var m = Math.min(to - nextFrom, buffCapacity - buff.size());
-						for(final var item : srcBuff.subList(nextFrom, nextFrom + m)) {
+						final int m = Math.min(to - nextFrom, buffCapacity - buff.size());
+						for(final T item : srcBuff.subList(nextFrom, nextFrom + m)) {
 							buff.add(item);
 						}
 						nextFrom += m;
@@ -113,7 +113,7 @@ implements OutputCoroutine<T> {
 			}
 			return nextFrom - from;
 		} else {
-			for(var i = from; i < to; i ++) {
+			for(int i = from; i < to; i ++) {
 				buff = selectBuff();
 				if(buff != null && buff.tryLock()) {
 					try {
@@ -162,7 +162,7 @@ implements OutputCoroutine<T> {
 				}
 			} catch(final EOFException | NoSuchObjectException | ConnectException ignored) {
 			} catch(final RemoteException e) {
-				final var cause = e.getCause();
+				final Throwable cause = e.getCause();
 				if(!(cause instanceof EOFException)) {
 					LOG.log(Level.WARNING, "Invocation failure", e);
 				}
@@ -182,8 +182,8 @@ implements OutputCoroutine<T> {
 	@Override
 	protected final void doClose()
 	throws IOException {
-		for(final var output : outputs) {
-			final var buff = buffs.get(output);
+		for(final O output : outputs) {
+			final OptLockBuffer<T> buff = buffs.get(output);
 			if(buff != null) {
 				buff.clear();
 			}

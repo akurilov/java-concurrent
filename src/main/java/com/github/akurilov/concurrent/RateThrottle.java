@@ -7,8 +7,8 @@ import static java.lang.System.nanoTime;
 /**
  * A semaphore-like non-blocking throttle which permits at the given rate.
  */
-public final class RateThrottle<X>
-implements Throttle<X> {
+public final class RateThrottle
+implements Throttle {
 
 	private final long periodNanos;
 	private volatile long startTime = -1;
@@ -27,10 +27,10 @@ implements Throttle<X> {
 	}
 
 	@Override
-	public final boolean tryAcquire(final X item) {
+	public final boolean tryAcquire() {
 		synchronized(this) {
 			if(startTime > 0) {
-				final var periodCount = (nanoTime() - startTime) / periodNanos;
+				final long periodCount = (nanoTime() - startTime) / periodNanos;
 				if(periodCount > acquiredCount) {
 					acquiredCount ++;
 					return true;
@@ -46,10 +46,10 @@ implements Throttle<X> {
 	}
 	
 	@Override
-	public final int tryAcquire(final X item, final int requiredCount) {
+	public final int tryAcquire(final int requiredCount) {
 		synchronized(this) {
 			if(startTime > 0) {
-				final var availableCount = (int) (
+				final int availableCount = (int) (
 					(nanoTime() - startTime) / periodNanos - acquiredCount
 				);
 				if(availableCount > requiredCount) {

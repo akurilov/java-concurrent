@@ -1,6 +1,6 @@
 package com.github.akurilov.concurrent.test;
 
-import com.github.akurilov.concurrent.WeightThrottle;
+import com.github.akurilov.concurrent.SequentialWeightsThrottle;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
@@ -20,7 +20,7 @@ import static org.junit.Assert.assertEquals;
  Created by andrey on 06.11.16.
  */
 
-public class WeightThrottleTest {
+public class SequentialWeightsThrottleTest {
 
 	private enum IoType {
 		CREATE, READ
@@ -40,7 +40,7 @@ public class WeightThrottleTest {
 		}
 	};
 
-	private final WeightThrottle wt = new WeightThrottle(weightMap);
+	private final SequentialWeightsThrottle wt = new SequentialWeightsThrottle(weightMap);
 
 	private final class SubmTask
 		implements Runnable {

@@ -33,7 +33,7 @@ implements Runnable {
 					break;
 				}
 			} else {
-				for(final var nextCoroutine : coroutines) {
+				for(final Coroutine nextCoroutine : coroutines) {
 					try {
 						if(nextCoroutine.isStarted()) {
 							nextCoroutine.invoke();

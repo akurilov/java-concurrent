@@ -11,7 +11,7 @@ allprojects {
 	apply plugin: "maven"
 	apply plugin: "signing"
 	group = "com.github.akurilov"
-	version = "2.0.0"
+	version = "2.0.1"
 }
 
 ext.moduleName = "${group}.concurrent"
@@ -21,50 +21,27 @@ repositories {
 }
 
 dependencies {
-	compile("com.github.akurilov:java-commons:[2.0.0,)")
+	compile("com.github.akurilov:java-commons:[2.0.1,)")
 	testCompile("junit:junit:4.12")
 }
 
 compileJava {
-	sourceCompatibility = JavaVersion.VERSION_1_10
-	targetCompatibility = JavaVersion.VERSION_1_10
-	inputs.property("moduleName", moduleName)
-	doFirst {
-		options.compilerArgs = [
-			"--module-path", classpath.asPath,
-		]
-		classpath = files()
-	}
+	sourceCompatibility = JavaVersion.VERSION_1_8
+	targetCompatibility = JavaVersion.VERSION_1_8
 }
 
 compileTestJava {
-	sourceCompatibility = JavaVersion.VERSION_1_10
-	targetCompatibility = JavaVersion.VERSION_1_10
-	inputs.property("moduleName", moduleName)
-	doFirst {
-		options.compilerArgs = [
-			"--module-path", classpath.asPath,
-			"--add-modules", "ALL-MODULE-PATH",
-			"--add-reads", "${moduleName}.test=junit",
-			"--patch-module", "$moduleName=" + files(sourceSets.test.java.outputDir).asPath,
-		]
-		classpath = files()
-	}
+	sourceCompatibility = JavaVersion.VERSION_1_8
+	targetCompatibility = JavaVersion.VERSION_1_8
 }
 
 jar {
-	inputs.property("moduleName", moduleName)
 	manifest {
 		attributes (
-			"Automatic-Module-Name": moduleName,
 			"Implementation-Version": version,
 			"Implementation-Title": rootProject.name,
 		)
 	}
-}
-
-javadoc {
-	options.addStringOption("-module-path", classpath.asPath)
 }
 
 task sourcesJar(type: Jar, dependsOn: classes) {
