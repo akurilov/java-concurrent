@@ -1,6 +1,5 @@
-package com.github.akurilov.concurrent.test.throttle;
+package com.github.akurilov.concurrent.throttle;
 
-import com.github.akurilov.concurrent.throttle.RateThrottle;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 
@@ -20,13 +19,12 @@ public class RateThrottleTest {
 	throws Exception {
 		final double rateLimit = 0.1;
 		final int timeLimitSec = 50;
-		final RateThrottle throttle = new RateThrottle(rateLimit);
-		final Object subj = new Object();
+		final Throttle throttle = new RateThrottle(rateLimit);
 		final LongAdder counter = new LongAdder();
 		final Thread submThread = new Thread(
 			() -> {
 				while(true) {
-					if(throttle.tryAcquire(subj)) {
+					if(throttle.tryAcquire()) {
 						counter.increment();
 					} else {
 						LockSupport.parkNanos(1);
@@ -46,13 +44,12 @@ public class RateThrottleTest {
 	throws Exception {
 		final int rateLimit = 10;
 		final int timeLimitSec = 10;
-		final RateThrottle throttle = new RateThrottle(rateLimit);
-		final Object subj = new Object();
+		final Throttle throttle = new RateThrottle(rateLimit);
 		final LongAdder counter = new LongAdder();
 		final Thread submThread = new Thread(
 			() -> {
 				while(true) {
-					if(throttle.tryAcquire(subj)) {
+					if(throttle.tryAcquire()) {
 						counter.increment();
 					} else {
 						LockSupport.parkNanos(1);
@@ -72,13 +69,12 @@ public class RateThrottleTest {
 	throws Exception {
 		final int rateLimit = 100_000;
 		final int timeLimitSec = 20;
-		final RateThrottle throttle = new RateThrottle(rateLimit);
-		final Object subj = new Object();
+		final Throttle throttle = new RateThrottle(rateLimit);
 		final LongAdder counter = new LongAdder();
 		final Thread submThread = new Thread(
 			() -> {
 				while(true) {
-					if(throttle.tryAcquire(subj)) {
+					if(throttle.tryAcquire()) {
 						counter.increment();
 					} else {
 						LockSupport.parkNanos(1);
@@ -98,14 +94,13 @@ public class RateThrottleTest {
 	throws Exception {
 		final int rateLimit = 1;
 		final int timeLimitSec = 50;
-		final RateThrottle throttle = new RateThrottle(rateLimit);
-		final Object subj = new Object();
+		final Throttle throttle = new RateThrottle(rateLimit);
 		final LongAdder counter = new LongAdder();
 		final Thread submThread = new Thread(
 			() -> {
 				int n;
 				while(true) {
-					n = throttle.tryAcquire(subj, 10);
+					n = throttle.tryAcquire(10);
 					if(n > 0) {
 						counter.add(n);
 					} else {
@@ -126,14 +121,13 @@ public class RateThrottleTest {
 	throws Exception {
 		final int rateLimit = 100;
 		final int timeLimitSec = 50;
-		final RateThrottle throttle = new RateThrottle(rateLimit);
-		final Object subj = new Object();
+		final Throttle throttle = new RateThrottle(rateLimit);
 		final LongAdder counter = new LongAdder();
 		final Thread submThread = new Thread(
 			() -> {
 				int n;
 				while(true) {
-					n = throttle.tryAcquire(subj, 100);
+					n = throttle.tryAcquire(100);
 					if(n > 0) {
 						counter.add(n);
 					} else {
@@ -154,14 +148,13 @@ public class RateThrottleTest {
 	throws Exception {
 		final int rateLimit = 1_000_000;
 		final int timeLimitSec = 10;
-		final RateThrottle throttle = new RateThrottle(rateLimit);
-		final Object subj = new Object();
+		final Throttle throttle = new RateThrottle(rateLimit);
 		final LongAdder counter = new LongAdder();
 		final Thread submThread = new Thread(
 			() -> {
 				int n;
 				while(true) {
-					n = throttle.tryAcquire(subj, 100);
+					n = throttle.tryAcquire(100);
 					if(n > 0) {
 						counter.add(n);
 					} else {
@@ -181,8 +174,7 @@ public class RateThrottleTest {
 	public void testRate1kHzBatchConcurrent() {
 		final int rateLimit = 1_000;
 		final int timeLimitSec = 20;
-		final Object subj = new Object();
-		final RateThrottle throttle = new RateThrottle(rateLimit);
+		final Throttle throttle = new RateThrottle(rateLimit);
 		final LongAdder counter = new LongAdder();
 		final ExecutorService execSvc = Executors.newFixedThreadPool(4);
 		for(int i = 0; i < 4; i ++) {
@@ -192,13 +184,13 @@ public class RateThrottleTest {
 					int n;
 					while(true) {
 						if(j == 0) {
-							if(throttle.tryAcquire(subj)) {
+							if(throttle.tryAcquire()) {
 								counter.increment();
 							} else {
 								LockSupport.parkNanos(1);
 							}
 						} else {
-							n = throttle.tryAcquire(subj, 1 + j);
+							n = throttle.tryAcquire(1 + j);
 							if(n > 0) {
 								counter.add(n);
 							} else {

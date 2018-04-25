@@ -1,14 +1,11 @@
-package com.github.akurilov.concurrent.test.coroutine;
+package com.github.akurilov.concurrent.coroutine;
 
 import com.github.akurilov.commons.io.Input;
 import com.github.akurilov.commons.io.Output;
 
-import com.github.akurilov.concurrent.coroutine.CoroutinesExecutor;
-import com.github.akurilov.concurrent.coroutine.RoundRobinOutputCoroutine;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
