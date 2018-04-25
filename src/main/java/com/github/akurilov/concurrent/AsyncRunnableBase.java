@@ -16,8 +16,9 @@ public abstract class AsyncRunnableBase
 implements AsyncRunnable {
 
 	private volatile State state = State.INITIAL;
+
 	private final Lock stateLock = new ReentrantLock();
-	protected final Condition stateChanged = stateLock.newCondition();
+	private final Condition stateChanged = stateLock.newCondition();
 
 	@Override
 	public final State state() {
@@ -176,18 +177,15 @@ implements AsyncRunnable {
 		} catch(final IllegalStateException ignored) {
 		}
 		// then close actually
-		if(stateLock.tryLock()) {
-			try {
-				if(null != state) {
-					doClose();
-					state = null;
-					stateChanged.signalAll();
-				}
-			} finally {
-				stateLock.unlock();
+		stateLock.lock();
+		try {
+			if(null != state) {
+				doClose();
+				state = null;
+				stateChanged.signalAll();
 			}
-		} else {
-			throw new IllegalStateException("Close: failed to acquire the state lock");
+		} finally {
+			stateLock.unlock();
 		}
 	}
 
