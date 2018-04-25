@@ -1,9 +1,10 @@
 package com.github.akurilov.concurrent;
 
 import java.io.IOException;
-import java.rmi.RemoteException;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import static com.github.akurilov.concurrent.AsyncRunnable.State.FINISHED;
 import static com.github.akurilov.concurrent.AsyncRunnable.State.INITIAL;
@@ -14,56 +15,64 @@ import static com.github.akurilov.concurrent.AsyncRunnable.State.STOPPED;
 public abstract class AsyncRunnableBase
 implements AsyncRunnable {
 
-	private final AtomicReference<State> stateRef = new AtomicReference<>(INITIAL);
-	protected final Object state = new Object();
+	private volatile State state = State.INITIAL;
+	private final Lock stateLock = new ReentrantLock();
+	protected final Condition stateChanged = stateLock.newCondition();
 
 	@Override
 	public final State state() {
-		return stateRef.get();
+		return state;
 	}
 
 	@Override
 	public boolean isInitial() {
-		return INITIAL.equals(stateRef.get());
+		return INITIAL == state;
 	}
 
 	@Override
 	public boolean isStarted() {
-		return STARTED.equals(stateRef.get());
+		return STARTED == state;
 	}
 
 	@Override
 	public boolean isShutdown() {
-		return SHUTDOWN.equals(stateRef.get());
+		return SHUTDOWN == state;
 	}
 
 	@Override
 	public boolean isStopped() {
-		return STOPPED.equals(stateRef.get());
+		return STOPPED == state;
 	}
 
 	@Override
 	public boolean isFinished() {
-		return FINISHED.equals(stateRef.get());
+		return FINISHED == state;
 	}
 
 	@Override
 	public boolean isClosed() {
-		return null == stateRef.get();
+		return null == state;
 	}
 
 	@Override
 	public final AsyncRunnableBase start()
 	throws IllegalStateException {
-		if(stateRef.compareAndSet(INITIAL, STARTED) || stateRef.compareAndSet(STOPPED, STARTED)) {
-			synchronized(state) {
-				doStart();
-				state.notifyAll();
+		if(stateLock.tryLock()) {
+			try {
+				if(state == INITIAL || state == STOPPED) {
+					doStart();
+					state = STARTED;
+					stateChanged.signalAll();
+				} else {
+					throw new IllegalStateException(
+						"Not allowed to start while state is \"" + state + "\""
+					);
+				}
+			} finally {
+				stateLock.unlock();
 			}
 		} else {
-			throw new IllegalStateException(
-				"Not allowed to start while state is \"" + stateRef.get() + "\""
-			);
+			throw new IllegalStateException("Start: failed to acquire the state lock");
 		}
 		return this;
 	}
@@ -71,35 +80,45 @@ implements AsyncRunnable {
 	@Override
 	public final AsyncRunnableBase shutdown()
 	throws IllegalStateException {
-		if(stateRef.compareAndSet(STARTED, SHUTDOWN)) {
-			synchronized(state) {
-				doShutdown();
-				state.notifyAll();
+		if(stateLock.tryLock()) {
+			try {
+				if(state == STARTED) {
+					doShutdown();
+					state = SHUTDOWN;
+					stateChanged.signalAll();
+				} else {
+					throw new IllegalStateException(
+						"Not allowed to shutdown while state is \"" + state + "\""
+					);
+				}
+			} finally {
+				stateLock.unlock();
 			}
 		} else {
-			throw new IllegalStateException(
-				"Not allowed to shutdown while state is \"" + stateRef.get() + "\""
-			);
+			throw new IllegalStateException("Shutdown: failed to acquire the state lock");
 		}
 		return this;
 	}
 
 	@Override
 	public final AsyncRunnableBase stop()
-	throws IllegalStateException, RemoteException {
-		try {
-			shutdown();
-		} catch(final IllegalStateException ignored) {
-		}
-		if(stateRef.compareAndSet(STARTED, STOPPED) || stateRef.compareAndSet(SHUTDOWN, STOPPED)) {
-			synchronized(state) {
-				doStop();
-				state.notifyAll();
+	throws IllegalStateException {
+		if(stateLock.tryLock()) {
+			try {
+				if(state == STARTED || state == SHUTDOWN) {
+					doStop();
+					state = STOPPED;
+					stateChanged.signalAll();
+				} else {
+					throw new IllegalStateException(
+						"Not allowed to stop while state is \"" + state + "\""
+					);
+				}
+			} finally {
+				stateLock.unlock();
 			}
 		} else {
-			throw new IllegalStateException(
-				"Not allowed to stop while state is \"" + stateRef.get() + "\""
-			);
+			throw new IllegalStateException("Stop: failed to acquire the state lock");
 		}
 		return this;
 	}
@@ -107,24 +126,45 @@ implements AsyncRunnable {
 	@Override
 	public final AsyncRunnableBase await()
 	throws IllegalStateException, InterruptedException {
-		await(Long.MAX_VALUE, TimeUnit.DAYS);
+		await(Long.MAX_VALUE, TimeUnit.MILLISECONDS);
 		return this;
 	}
 
 	@Override
 	public boolean await(final long timeout, final TimeUnit timeUnit)
 	throws IllegalStateException, InterruptedException {
-		final long timeOutMilliSec = timeUnit.toMillis(timeout);
-		final long t = System.currentTimeMillis();
-		while(isStarted() || isShutdown()) {
-			if(System.currentTimeMillis() - t >= timeOutMilliSec) {
-				return false;
-			}
-			synchronized(state) {
-				state.wait(100);
+		final long invokeTimeMillis = System.currentTimeMillis();
+		final long timeOutMillis = timeUnit.toMillis(timeout);
+		long elapsedTimeMillis;
+		while(timeOutMillis > (elapsedTimeMillis = System.currentTimeMillis() - invokeTimeMillis)) {
+			if(state != STARTED && state != SHUTDOWN) {
+				return true; // condition is reached
+			} else {
+				if(stateLock.tryLock(timeOutMillis - elapsedTimeMillis, TimeUnit.MILLISECONDS)) {
+					try {
+						// spent a time to wait for the state lock, need to update the elapsed time
+						elapsedTimeMillis = System.currentTimeMillis() - invokeTimeMillis;
+						// recheck for the timeout condition
+						if(timeOutMillis > elapsedTimeMillis) {
+							if(
+								stateChanged.await(
+									timeOutMillis - elapsedTimeMillis, TimeUnit.MILLISECONDS
+								)
+							) { // the state is changed, recheck the condition
+								if(state != STARTED && state != SHUTDOWN) {
+									return true;
+								} // continue otherwise (no timeout yet, condition is not reached)
+							}
+						} else { // timeout, exit the loop
+							break;
+						}
+					} finally {
+						stateLock.unlock();
+					}
+				}
 			}
 		}
-		return true;
+		return state != STARTED && state != SHUTDOWN;
 	}
 
 	@Override
@@ -136,12 +176,18 @@ implements AsyncRunnable {
 		} catch(final IllegalStateException ignored) {
 		}
 		// then close actually
-		synchronized(state) {
-			if(null != stateRef.get()) {
-				doClose();
-				stateRef.set(null);
-				state.notifyAll();
+		if(stateLock.tryLock()) {
+			try {
+				if(null != state) {
+					doClose();
+					state = null;
+					stateChanged.signalAll();
+				}
+			} finally {
+				stateLock.unlock();
 			}
+		} else {
+			throw new IllegalStateException("Close: failed to acquire the state lock");
 		}
 	}
 
