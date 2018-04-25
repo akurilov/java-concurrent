@@ -34,10 +34,10 @@ To implement the simpliest coroutine one should extend the
 `CoroutineBase` class:
 
 ```java
-package com.github.akurilov.concurrent.coroutines.example;
+package com.github.akurilov.concurrent.coroutine.example;
 
-import com.github.akurilov.concurrent.coroutines.CoroutineBase;
-import com.github.akurilov.concurrent.coroutines.CoroutineProcessor;
+import com.github.akurilov.concurrent.coroutine.CoroutineBase;
+import com.github.akurilov.concurrent.coroutine.CoroutineProcessor;
 
 public class HelloWorldCoroutine
 extends CoroutineBase {
@@ -63,10 +63,10 @@ The method `invokeTimed` does the useful work. The example code below
 utilizes that coroutine:
 
 ```java
-package com.github.akurilov.concurrent.coroutines.example;
+package com.github.akurilov.concurrent.coroutine.example;
 
-import com.github.akurilov.concurrent.coroutines.Coroutine;
-import com.github.akurilov.concurrent.coroutines.CoroutinesProcessor;
+import com.github.akurilov.concurrent.coroutine.Coroutine;
+import com.github.akurilov.concurrent.coroutine.CoroutinesProcessor;
 
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
@@ -116,10 +116,10 @@ An exclusive coroutine is restricted by a single thread. It allows:
 * Don't care of thread safety
 
 ```java
-package com.github.akurilov.concurrent.coroutines.example;
+package com.github.akurilov.concurrent.coroutine.example;
 
 ...
-import com.github.akurilov.concurrent.coroutines.ExclusiveCoroutineBase;
+import com.github.akurilov.concurrent.coroutine.ExclusiveCoroutineBase;
 
 public class HelloWorldExclusiveCoroutine
 extends ExclusiveCoroutineBase {
