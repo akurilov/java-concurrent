@@ -58,22 +58,19 @@ implements AsyncRunnable {
 	@Override
 	public final AsyncRunnableBase start()
 	throws IllegalStateException {
-		if(stateLock.tryLock()) {
-			try {
-				if(state == INITIAL || state == STOPPED) {
-					doStart();
-					state = STARTED;
-					stateChanged.signalAll();
-				} else {
-					throw new IllegalStateException(
-						"Not allowed to start while state is \"" + state + "\""
-					);
-				}
-			} finally {
-				stateLock.unlock();
+		stateLock.lock();
+		try {
+			if(state == INITIAL || state == STOPPED) {
+				doStart();
+				state = STARTED;
+				stateChanged.signalAll();
+			} else {
+				throw new IllegalStateException(
+					"Not allowed to start while state is \"" + state + "\""
+				);
 			}
-		} else {
-			throw new IllegalStateException("Start: failed to acquire the state lock");
+		} finally {
+			stateLock.unlock();
 		}
 		return this;
 	}
@@ -81,22 +78,19 @@ implements AsyncRunnable {
 	@Override
 	public final AsyncRunnableBase shutdown()
 	throws IllegalStateException {
-		if(stateLock.tryLock()) {
-			try {
-				if(state == STARTED) {
-					doShutdown();
-					state = SHUTDOWN;
-					stateChanged.signalAll();
-				} else {
-					throw new IllegalStateException(
-						"Not allowed to shutdown while state is \"" + state + "\""
-					);
-				}
-			} finally {
-				stateLock.unlock();
+		stateLock.lock();
+		try {
+			if(state == STARTED) {
+				doShutdown();
+				state = SHUTDOWN;
+				stateChanged.signalAll();
+			} else {
+				throw new IllegalStateException(
+					"Not allowed to shutdown while state is \"" + state + "\""
+				);
 			}
-		} else {
-			throw new IllegalStateException("Shutdown: failed to acquire the state lock");
+		} finally {
+			stateLock.unlock();
 		}
 		return this;
 	}
@@ -104,22 +98,19 @@ implements AsyncRunnable {
 	@Override
 	public final AsyncRunnableBase stop()
 	throws IllegalStateException {
-		if(stateLock.tryLock()) {
-			try {
-				if(state == STARTED || state == SHUTDOWN) {
-					doStop();
-					state = STOPPED;
-					stateChanged.signalAll();
-				} else {
-					throw new IllegalStateException(
-						"Not allowed to stop while state is \"" + state + "\""
-					);
-				}
-			} finally {
-				stateLock.unlock();
+		stateLock.lock();
+		try {
+			if(state == STARTED || state == SHUTDOWN) {
+				doStop();
+				state = STOPPED;
+				stateChanged.signalAll();
+			} else {
+				throw new IllegalStateException(
+					"Not allowed to stop while state is \"" + state + "\""
+				);
 			}
-		} else {
-			throw new IllegalStateException("Stop: failed to acquire the state lock");
+		} finally {
+			stateLock.unlock();
 		}
 		return this;
 	}
