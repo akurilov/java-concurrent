@@ -141,7 +141,7 @@ implements OutputCoroutine<T> {
 
 	@Override
 	protected final void invokeTimed(final long startTimeNanos) {
-		// select the output
+		// select the output using RR
 		final O output = outputs.get(
 			outputsCount > 1 ? (int) (getCounter.getAndIncrement() % outputsCount) : 0
 		);
